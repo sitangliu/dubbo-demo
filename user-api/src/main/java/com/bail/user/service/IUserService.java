@@ -9,4 +9,5 @@ public interface IUserService {
 
     String queryList();
 
+    String getUserById(Long id);
 }

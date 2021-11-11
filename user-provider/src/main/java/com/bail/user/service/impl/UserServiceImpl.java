@@ -15,4 +15,10 @@ public class UserServiceImpl implements IUserService {
     public String queryList() {
         return "list user";
     }
+
+    @Override
+    public String getUserById(Long id) {
+
+        return "user one";
+    }
 }

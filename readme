@@ -1,0 +1,61 @@
+##功能
+此工程是为了方便查看dubbo接口注册的过程，而构建的一个项目，
+方便查看注册、消费过程中，数据的变化。
+
+###注册过程
+注册内容：
+
+当只有一个接口一个方法的时候：
+```properties
+dubbo
+    com.bail.user.service.IUserService
+        providers
+            dubbo://192.168.137.210:20880/com.bail.user.service.IUserService\
+  ?anyhost=true&application=user-provider&dubbo=2.6.2\
+  &generic=false&interface=com.bail.user.service.IUserService\
+  &methods=queryList&pid=23128&revision=1.0.0\
+  &side=provider&timestamp=1636619128385&version=1.0.0
+```
+当一个接口多个方法的时候 "&methods=getUserById,queryList"
+```properties
+dubbo
+    com.bail.user.service.IUserService
+        providers
+            dubbo://192.168.137.210:20880/com.bail.user.service.IUserService\
+  ?anyhost=true&application=user-provider&dubbo=2.6.2\
+  &generic=false&interface=com.bail.user.service.IUserService\
+  &methods=getUserById,queryList&pid=35280&revision=1.0.0\
+  &side=provider&timestamp=1636622016888&version=1.0.0
+```
+当一个接口中有多个方法，某个方法有特殊配置的时候，针对方法会有getUserById.timeout=3000、getUserById.retries
+拼接字符串生成，针对接口的只有单一属性字符串：retries=2
+```properties
+dubbo
+    com.bail.user.service.IUserService
+        providers
+            dubbo://192.168.137.210:20880/com.bail.user.service.IUserService\
+  ?anyhost=true&application=user-provider&dubbo=2.6.2\
+  &generic=false&getUserById.retries=3&getUserById.timeout=3000\
+  &interface=com.bail.user.service.IUserService\
+  &methods=getUserById,queryList&pid=27776\
+  &retries=2&revision=1.0.0&side=provider&timeout=8000\
+  &timestamp=1636622208261&version=1.0.0
+```
+当有多个接口时，内容如下
+```properties
+dubbo
+    com.bail.user.service.IUserService
+    com.bail.user.service.IOrderService
+        providers
+            dubbo://...
+        consumers
+            consumer://...
+```
+### 消费过程
+消费内容：
+```properties
+dubbo
+    com.bail.user.service.IUserService
+        consumers
+            consumer://192.168.137.210/com.bail.user.service.IUserService?application=user-consumer&category=consumers&check=false&dubbo=2.6.2&interface=com.bail.user.service.IUserService&methods=getUserById,queryList&pid=39836&revision=1.0.0&side=consumer&timestamp=1636623061459&version=1.0.0
+```

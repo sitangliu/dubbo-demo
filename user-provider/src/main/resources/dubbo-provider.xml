@@ -10,5 +10,9 @@
     <dubbo:application name="user-provider"/>
     <dubbo:registry protocol="zookeeper" address="zookeeper://127.0.0.1:2181"/>
     <dubbo:protocol name="dubbo" port="20880"/>
-    <dubbo:service interface="com.bail.user.service.IUserService" ref="userServiceImpl" version="1.0.0"/>
+    <dubbo:service interface="com.bail.user.service.IUserService" ref="userServiceImpl" version="1.0.0" timeout="8000" retries="2">
+        <dubbo:method name="getUserById" retries="3" timeout="3000"></dubbo:method>
+    </dubbo:service>
+
+    <dubbo:service interface="com.bail.user.service.IOrderService" ref="orderServiceImpl"/>
 </beans>
