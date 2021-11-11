@@ -3,7 +3,12 @@
 方便查看注册、消费过程中，数据的变化。
 
 ###注册过程
-注册内容：
+####加载过程
+以 com.bail.user.service.IUserService接口为例，
+在bean初始化属性设置完之后，触发ServiceBean的 afterProperties方法，在afterProperties方法中，加载了applicatonConfig对象、
+registerConfig “<dubbo:registry address="zookeeper://127.0.0.1:2181" protocol="zookeeper" id="com.alibaba.dubbo.config.RegistryConfig" />”，
+加载了ProtocolConfig配置，<dubbo:protocol name="dubbo" port="20880" id="dubbo" /> 返回的WrapperBean是一个ServiceBean类型的Bean，包括对外提供的接口、方法、超时、重试等属性。
+####注册内容：
 
 当只有一个接口一个方法的时候：
 ```properties
