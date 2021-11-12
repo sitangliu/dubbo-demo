@@ -4,6 +4,44 @@
 
 ###注册过程
 ####加载过程
+1、SpringBoot启动过程，加载dubbo_provider.xml文件
+应用上下文对象：AnnotationConfigServletWebServerApplicationContext 注解配置web servlet应用上下文,
+
+SpringApplication的 prepareContext()方法，调用load()方法，其中对启动类进行解析，即UserProviderBootstrap配置类进行主类解析。
+调用BeanDefinitionLoader的load()方法，重载调用load(Class<?> source)，调用AnnotatedBeanDefinitionReader，进行配置类注册；
+调用AnnotationConfigUtils的processCommonDefinitionAnnotations方法，进行启动类上通用注解解析，
+调用BeanDefinitionReaderUtils的registerBeanDefinition()方法进行bean的具体注册，经过多层调用，调用DefaultListableBeanFactory的
+registerBeanDefinition()方法进行BeanDefinition在容器的注入，至此 prepareContext()方法执行完毕，
+主要完成了启动类BeanDefinition的注入
+
+接着调用SpringApplication的refreshContext(context)方法，调用了AbstractApplicationContext的refresh()方法，进入上下文刷新的主要过程，
+obtainFreshBeanFactory()方法调用了GenericApplicationContext的refreshBeanFactory()方法，返回了已经创建的BeanFactory
+（此处不同于SpringWeb项目启动，调用的是AbstractRefreshableApplicationContext的refreshBeanFactory()方法）
+
+refresh()方法接着调用postProcessBeanFactory(beanFactory)方法,主要完成了作用域范围依赖的注册，如session；request、response、
+application范围域，在springboot项目中，并没有执行下面的功能： 对创建的 Bean 工厂进行后置处理，
+如处理 @Configuration 注解的配置类，从该配置类中获取更多的 Java 对象的元数据，
+如在该配置类内部使用 @Bean 注解的方法会被加载和对应到一个 Java 对象；
+
+refresh()方法接着调用invokeBeanFactoryPostProcessors(beanFactory)方法，调用了 SharedMetadataReaderFactoryContextInitializer
+的postProcessBeanDefinitionRegistry()方法，配置了配置类后置处理器org.springframework.context.annotation.internalConfigurationAnnotationProcessor，
+接着调用了ConfigurationWarningsApplicationContextInitializer的postProcessBeanDefinitionRegistry()方法，经过多层调用，调用了
+getComponentScanningPackages()方法，解析BeanDefinitionMap中注解类型的BeanDefinition，用来加载配置类中的Bean信息，此处读取到了com.bail.user.service.UserProviderBootstrap
+我们的启动类，通过读取注解类中的元信息,添加扫描包路径信息。
+![img.png](img.png)
+读取到的元信息有@SpringBootApplication、@ImportResources注解,根据从注解中获取到的属性信息读取package，如果获取package为空，则默认设置为
+当前启动类下的包路径及其子路径
+![img_1.png](img/img_1.png)
+在调用完两个内置后处理器之后，加载后置处理器的bean实例，getBean(String name, Class<T> requiredType)，此处的requiredType = BeanDefinitionRegistryPostProcessor，
+name = org.springframework.context.annotation.internalConfigurationAnnotationProcessor，创建了ConfigurationClassPostProcessor类的实例，
+调用sortPostProcessors(currentRegistryProcessors, beanFactory)对注册处理器进行排序，随后调用invokeBeanDefinitionRegistryPostProcessors方法，即ConfigurationClassPostProcessor bean,
+,调用ConfigurationClassPostProcessor的processConfigBeanDefinitions()方法，此处解析到启动类带有@Configuration注解，将主类beanDefinition添加到了候选类中configCandidates中，
+随后在ConfigurationClassPostProcessor中创建了ConfigurationClassParser解析类，随后对候选类进行解析，随后调用ConfigurationClassParser类的processConfigurationClass()方法，对
+Configuration类进行解析，包括Component、PropertySources、ComponentScan、ComponentScans、ImportResource等注解进行解析
+
+
+刷新应用上下文，加载配置资源，AbstractApplicationContext 的refresh()方法
+
 以 com.bail.user.service.IUserService接口为例，
 在bean初始化属性设置完之后，触发ServiceBean的 afterProperties方法，在afterProperties方法中，加载了applicatonConfig对象、
 registerConfig “<dubbo:registry address="zookeeper://127.0.0.1:2181" protocol="zookeeper" id="com.alibaba.dubbo.config.RegistryConfig" />”，
