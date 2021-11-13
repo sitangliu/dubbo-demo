@@ -57,6 +57,8 @@ Lazy、Primary、DependsOn、Role、Descriptiond等属性的赋值；随后有�
 
 ![img2](img\img2.png)
 此处，将location文件及解析类放到了map中
+解析完启动类，此时configurationClasses map中总共有3个类，启动类+Order+User3个配置类
+接着，调用一些自动装配类，如属性占位符自动装配类、总共加载了50左右各Configuration类
 
 刷新应用上下文，加载配置资源，AbstractApplicationContext 的refresh()方法
 
