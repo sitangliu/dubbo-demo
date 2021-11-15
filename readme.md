@@ -59,6 +59,10 @@ Lazy、Primary、DependsOn、Role、Descriptiond等属性的赋值；随后有�
 此处，将location文件及解析类放到了map中
 解析完启动类，此时configurationClasses map中总共有3个类，启动类+Order+User3个配置类
 接着，调用一些自动装配类，如属性占位符自动装配类、总共加载了50左右各Configuration类
+随后继续执行，调用到了enhanceConfigurationClasses()方法，对配置类进行加强处理，此处有两个配置类进行了加强，即启动类(UserProviderBootstrap)和Dubbo自动装配类(DubboAutoConfiguration)。
+随后在执行完ConfigurationClassPostProcessor的postProcessBeanFactory()方法之后，添加了ImportAwareBeanPostProcessor类型的后置处理器。
+
+
 
 接着调用registerBeanPostProcessors(beanFactory)方法，调用bean后置处理器，首先PostProcessorRegistrationDelegate.registerBeanPostProcessors(beanFactory, this)调用此方法注册Bean后置处理器，
 调用doGetBeanNamesForType从beanDefinitionNames加载类型为BeanPostProcessor的bean,然后通过getBean()获取对应bean的实例对象，
