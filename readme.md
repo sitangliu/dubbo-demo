@@ -60,12 +60,54 @@ Lazy、Primary、DependsOn、Role、Descriptiond等属性的赋值；随后有�
 解析完启动类，此时configurationClasses map中总共有3个类，启动类+Order+User3个配置类
 接着，调用一些自动装配类，如属性占位符自动装配类、总共加载了50左右各Configuration类
 
+接着调用registerBeanPostProcessors(beanFactory)方法，调用bean后置处理器，首先PostProcessorRegistrationDelegate.registerBeanPostProcessors(beanFactory, this)调用此方法注册Bean后置处理器，
+调用doGetBeanNamesForType从beanDefinitionNames加载类型为BeanPostProcessor的bean,然后通过getBean()获取对应bean的实例对象，
+![img_1.png](img/img_3.png)
+首先注册带有优先级顺序的BeanPostProcessor,随后注册带有Order顺序的BeanPostProcessor，注册常规属性的BeanPostProcessor，注册内部BeanPostProcessor,最后添加一个应用监听器类型的BeanPostProcessor，
+
+然后调用onRefresh()方法，实例化一个上下文子类中的一些特殊的Bean，此处调用了ServletWebServerApplicationContext的onRefresh()方法，内部调用了createWebServer()方法，在内部调用了doGetBeanNamesForType()方法，
+来查找BeanDefinitions中复合ServletWebServerFactory类型的BeanDefinition,随后查找到tomcatServletWebServerFactory类型的BeanDefinition,然后在手动管理单例集合中，查找是否有满足的BeanDefinition,确定没有。
+根据找到的BeanDefinition开始初始化ServletWebServerFactory类型的对象。经过getBean()过程，此时使用工厂方法获取Bean,此时返回的工厂对象为ServletWebServerFactoryConfiguration$EmbeddedTomcat。使用工厂方法返回
+TomcatServletWebServerFactory类型的BeanWrapper对象。
+接着加载 org.springframework.boot.autoconfigure.websocket.servlet.WebSocketServletAutoConfiguration$TomcatWebSocketConfiguration对象；
+
+然后调用registerListeners()方法，进行监听器注册，将监听器进入到广播器中，如果早期发布事件不为空，就会进行事件发布；
+
+然后调用finishBeanFactoryInitialization(beanFactory)方法，初始化所有非懒加载的bean单例对象；在finishBeanFactoryInitialization方法中，将冻结标识标记为true,从beanDefinitions中，实例化所有剩余的(非惰性init)单例对象。
+
 刷新应用上下文，加载配置资源，AbstractApplicationContext 的refresh()方法
 
 以 com.bail.user.service.IUserService接口为例，
 在bean初始化属性设置完之后，触发ServiceBean的 afterProperties方法，在afterProperties方法中，加载了applicatonConfig对象、
 registerConfig “<dubbo:registry address="zookeeper://127.0.0.1:2181" protocol="zookeeper" id="com.alibaba.dubbo.config.RegistryConfig" />”，
 加载了ProtocolConfig配置，<dubbo:protocol name="dubbo" port="20880" id="dubbo" /> 返回的WrapperBean是一个ServiceBean类型的Bean，包括对外提供的接口、方法、超时、重试等属性。
+
+#### getBean过程
+涉及到的容器：singletonObjects  private final Map<String, Object> singletonObjects = new ConcurrentHashMap<>(256);
+getSingleton(String beanName, boolean allowEarlyReference);方法涉及三级缓存；
+在createBean()方法的过程中，会有一个resolveBeforeInstantiation()方法，用来给BeanPostProcessor一个机会，用来在Bean实例化之前返回它的一个代理对象。
+如果返回的代理对象为空，接着调用自己的doCreateBean()方法，实例化Bean。在doCreateBean方法中声明了一个BeanWrapper，随后继续调用createBeanInstance方法，在方法中，首先判断BeanDefinition
+中是否定义了工厂方法mbd.getFactoryMethodName(),此处加载的Bean Class为TomcatServletWebServerFactory,FactoryMethodName为tomcatServletWebServerFactory，因此使用工厂方法实例化
+WebServer。 在beanFactory.initBeanWrapper(bw)过程中，提供了数据值类型转化服务。 此时 factoryMethodName= org.springframework.boot.autoconfigure.web.servlet
+.ServletWebServerFactoryConfiguration$EmbeddedTomcat.此时将factoryMethodName作为BeanName,调用getBean方法，加载factoryBean实例。内部依赖工厂加载，此时包含一个完整的Bean加载过程。
+在getSingleton()方法中获得到单例对象之后，调用了 addSingleton(String beanName, Object singletonObject)方法：
+```java
+	protected void addSingleton(String beanName, Object singletonObject) {
+		synchronized (this.singletonObjects) {
+			this.singletonObjects.put(beanName, singletonObject);
+			this.singletonFactories.remove(beanName);
+			this.earlySingletonObjects.remove(beanName);
+			this.registeredSingletons.add(beanName);
+		}
+	}
+```
+
+
+
+initializeBean()中的applyBeanPostProcessorsBeforeInitialization()在对象初始化之前，进行一些处理；最后调用invokeInitMethods()方法，用来执行bean在继承InitializingBean之后覆写的
+afterPropertiesSet()方法;之后有一个invokeCustomInitMethod()方法；随后调用applyBeanPostProcessorsAfterInitialization(wrappedBean, beanName)初始化之后处理；
+
+
 ####注册内容：
 
 当只有一个接口一个方法的时候：
