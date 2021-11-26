@@ -14,6 +14,8 @@ SpringApplication的 prepareContext()方法，调用load()方法，其中对启�
 registerBeanDefinition()方法进行BeanDefinition在容器的注入，至此 prepareContext()方法执行完毕，
 主要完成了启动类BeanDefinition的注入
 
+prepareContext()方法中，调用了applyInitializers(context)应用初始化方法，注册了bean工厂后置处理器.
+
 接着调用SpringApplication的refreshContext(context)方法，调用了AbstractApplicationContext的refresh()方法，进入上下文刷新的主要过程，
 obtainFreshBeanFactory()方法调用了GenericApplicationContext的refreshBeanFactory()方法，返回了已经创建的BeanFactory
 （此处不同于SpringWeb项目启动，调用的是AbstractRefreshableApplicationContext的refreshBeanFactory()方法）
@@ -24,7 +26,8 @@ application范围域，在springboot项目中，并没有执行下面的功能�
 如在该配置类内部使用 @Bean 注解的方法会被加载和对应到一个 Java 对象；
 
 refresh()方法接着调用invokeBeanFactoryPostProcessors(beanFactory)方法，调用了 SharedMetadataReaderFactoryContextInitializer
-的postProcessBeanDefinitionRegistry()方法，配置了配置类后置处理器org.springframework.context.annotation.internalConfigurationAnnotationProcessor，
+的postProcessBeanDefinitionRegistry()方法，方法内部在BeanDefinitionMap中添加了org.springframework.boot.autoconfigure.internalCachingMetadataReaderFactory
+beanDefinition，随后调用configureConfigurationClassPostProcessor方法，为internalCachingMetadataReaderFactory添加了metadataReaderFactory属性，配置了配置类后置处理器org.springframework.context.annotation.internalConfigurationAnnotationProcessor，
 接着调用了ConfigurationWarningsApplicationContextInitializer的postProcessBeanDefinitionRegistry()方法，经过多层调用，调用了
 getComponentScanningPackages()方法，解析BeanDefinitionMap中注解类型的BeanDefinition，用来加载配置类中的Bean信息，此处读取到了com.bail.user.service.UserProviderBootstrap
 我们的启动类，通过读取注解类中的元信息,添加扫描包路径信息。
@@ -45,7 +48,8 @@ Configuration类进行解析，包括Component、PropertySources、ComponentScan
 ComponentScanAnnotationParser类的parse()方法，此处在解析到basePackages属性的时候，如果basePackages为空，默认设置为包根路径，读取到basePackages属性值后，
 调用ClassPathBeanDefinitionScanner实例对象scanner的doScan()方法，对包路径进行BeanDefinition的注册，多层调用，调用ClassPathScanningCandidateComponentProvider类的
 scanCandidateComponents()方法，根据类路径进行候选类的扫描，首先扫描到了包路径下的所有类，将类包装成Resource类型，然后根据从Resource上获取到的metadataReader信息判断是否是
-候选类，很奇怪，此处的启动类居然不符合判断方法，OrderServiceImpl、UserServiceImpl符合候选类，至此从加载类中找到两个标注了@Component注解的候选类。然后对两个候选类进行循环处理，
+候选类，很奇怪，此处的启动类居然不符合判断方法，OrderServiceImpl、UserServiceImpl符合候选类，至此从加载类中找到两个标注了@Component注解的候选类。检查扫描的定义集是否有任何进一步的配置类，并在需要时进行递归解析，
+然后对两个候选类进行循环处理，
 处理过程中，继续调用postProcessBeanDefinition方法，对BeanDefinition进行默认属性赋值，调用AnnotationConfigUtils.processCommonDefinitionAnnotations进行BeanDefinition通用属性的赋值，如
 Lazy、Primary、DependsOn、Role、Descriptiond等属性的赋值；随后有一个作用域范围代理模式的处理，如果不符合直接返回。
 接着针对候选项类进行配置类处理，调用了processConfigurationClass()方法，包括Component、PropertySources、ComponentScan、ComponentScans、ImportResource、BeanMethod等注解的解析，

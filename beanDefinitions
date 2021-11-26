@@ -1,3 +1,23 @@
+初始加载BeanDefinitions
+0 = "org.springframework.context.annotation.internalConfigurationAnnotationProcessor"  
+Root bean: class [org.springframework.context.annotation.ConfigurationClassPostProcessor]
+Type [BeanFactoryPostProcessor]
+1 = "org.springframework.context.annotation.internalAutowiredAnnotationProcessor"
+Root bean: class [org.springframework.beans.factory.annotation.AutowiredAnnotationBeanPostProcessor]
+Type [BeanPostProcessor]
+2 = "org.springframework.context.annotation.internalCommonAnnotationProcessor"
+Root bean: class [org.springframework.context.annotation.CommonAnnotationBeanPostProcessor]
+Type [BeanPostProcessor]
+3 = "org.springframework.context.event.internalEventListenerProcessor"
+Root bean: class [org.springframework.context.event.DefaultEventListenerFactory]
+Type [EventListenerFactory]
+4 = "org.springframework.context.event.internalEventListenerFactory"
+Type [EventListenerFactory]
+5 = "userProviderBootstrap"
+0-4是何时注册的？
+
+
+在调用完invokeBeanFactoryPostProcessors(beanFactory)方法之后，
 0 = "org.springframework.context.annotation.internalConfigurationAnnotationProcessor"
 1 = "org.springframework.context.annotation.internalAutowiredAnnotationProcessor"
 2 = "org.springframework.context.annotation.internalCommonAnnotationProcessor"
