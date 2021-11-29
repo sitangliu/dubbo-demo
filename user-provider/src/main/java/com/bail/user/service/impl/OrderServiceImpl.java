@@ -1,7 +1,11 @@
 package com.bail.user.service.impl;
 
 import com.bail.user.service.IOrderService;
+import com.bail.user.service.ProductService;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+
+import javax.annotation.Resource;
 
 /**
  * @Description：create
@@ -10,6 +14,15 @@ import org.springframework.stereotype.Service;
  */
 @Service
 public class OrderServiceImpl implements IOrderService {
+
+    @Value("order.name")
+    private String orderName;
+
+    private Integer orderNum;
+
+    @Resource
+    private ProductService productService;
+
     @Override
     public String queryOrderList() {
         return "order list";
