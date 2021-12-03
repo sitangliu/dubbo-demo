@@ -13,7 +13,7 @@ import org.springframework.stereotype.Service;
 public class UserServiceImpl implements IUserService {
     @Override
     public String queryList() {
-        return "list user";
+        return "list user"+System.currentTimeMillis();
     }
 
     @Override
